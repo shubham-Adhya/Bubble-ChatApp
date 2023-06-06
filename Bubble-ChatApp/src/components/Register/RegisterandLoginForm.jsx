@@ -6,7 +6,7 @@ export default function RegisterandLoginForm() {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoginOrRegister, setIsLoginRegister]= useState('register');
+  const [isLoginOrRegister, setIsLoginRegister]= useState('login');
   const {setLoggedInUserName, setId } = useContext(UserContext);
   
   async function handleSumbit(ev){
@@ -56,13 +56,13 @@ export default function RegisterandLoginForm() {
           {isLoginOrRegister==='register' && (
             <div>
               Already a member? &nbsp;
-            <button onClick={()=>setIsLoginRegister('login')}> Login Here</button>
+            <button className=" m-1" onClick={()=>setIsLoginRegister('login')}> Login Here</button>
             </div>
           )}
           {isLoginOrRegister==='login' && (
             <div>
               Dont have an account? &nbsp;
-            <button onClick={()=>setIsLoginRegister('register')}> Register Here</button>
+            <button className=" m-1" onClick={()=>setIsLoginRegister('register')}> Register Here</button>
             </div>
           )}
         </div>

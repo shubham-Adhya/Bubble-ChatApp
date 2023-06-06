@@ -1,4 +1,6 @@
 const express = require('express');
+const fs=require('fs');
+const path=require('node:path')
 const cors = require('cors');
 const cookieParser = require('cookie-parser')
 const jwt=require('jsonwebtoken');
@@ -11,11 +13,13 @@ const { connection } = require('./configs/mongoDB');
 const { userRouter } = require("./routes/user.routes");
 const { messagesRouter } = require("./routes/messages.routes");
 
+
 const PORT = process.env.PORT || 4000;
 
 
 
 const app = express();
+
 app.use(cors({
     credentials: true,
     origin: process.env.client_URL
@@ -26,9 +30,10 @@ app.use(cookieParser())
 app.get('/', (req, res) => {
     res.status(200).json("test OK");
 })
-
+app.use('/uploads', express.static(__dirname+'/uploads'))
 app.use('/user', userRouter);
 app.use('/messages', messagesRouter);
+
 
 const server = app.listen(PORT, async () => {
     try {
@@ -93,12 +98,25 @@ function notifyAboutOnlinePeople(){
     }
 
     connection.on('message',async (msg)=>{
-        const {recipient,text}=JSON.parse(msg).message
-        if(recipient && text){
+        const {recipient,text, file}=JSON.parse(msg).message
+        let filename=null;
+        if(file){
+            // console.log(file)
+            const parts=file.name.split('.');
+            const ext = parts[parts.length-1];
+            filename= Date.now() + '.'+ext;
+            const path = __dirname+'/uploads/'+filename;
+            const bufferData= new Buffer.from(file.data, 'base64')
+            fs.writeFile(path, bufferData, ()=>{
+                console.log("File Saved to "+ path)
+            })
+        } 
+        if(recipient && (text || file)){
             const messageDoc = await MessageModel.create({
                 sender: connection.userId,
                 recipient,
-                text
+                text,
+                file: file? filename : null
             });
             [...wss.clients]
                 .filter(c=> c.userId === recipient)
@@ -106,6 +124,7 @@ function notifyAboutOnlinePeople(){
                     text, 
                     sender: connection.userId,
                     recipient,
+                    file: file ? filename : null,
                     _id: messageDoc._id
                 })));
         }

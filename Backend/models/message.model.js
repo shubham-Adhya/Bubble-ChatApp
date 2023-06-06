@@ -9,7 +9,8 @@ const messageSchema=mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'user'
     },
-    text: String
+    text: String,
+    file: String
 
 },{
     timestamps: true,

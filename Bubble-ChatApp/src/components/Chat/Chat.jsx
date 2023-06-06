@@ -16,8 +16,8 @@ export default function Chat(){
     const divUnderMessages= useRef()
 
     useEffect(()=>{
-        connectToWs()
-    },[])
+        connectToWs();
+    }, [selectedUserId])
     function connectToWs(){
         const ws = new WebSocket('ws://localhost:8080');
         setWs(ws);
@@ -30,7 +30,7 @@ export default function Chat(){
         });
     }
     function showOnlinePeople(peopleArray){
-        const people=new Object();
+        const people={};
         peopleArray.forEach(({userId,userName}) => {
             people[userId]=userName
         });
@@ -38,18 +38,19 @@ export default function Chat(){
     }
 
     // 'message' event callback
-    function handleMessage(ev){
+    async function handleMessage(ev){
         const messageData=JSON.parse(ev.data);
         // console.log({ev,messageData})
         if('online' in messageData){
             showOnlinePeople(messageData.online)
         }else if('text' in messageData){
-            setmessages(prev=>([...prev,{...messageData}]))
+            // console.log(messageData)
+            if(messageData.sender === selectedUserId){
+                setmessages(prev=>([...prev,{...messageData}]))
+            }
         }
     }
-    function selectContact(userId){
-        setselectedUserId(userId)
-    }
+    
 
     function logout(){
         axios.post('/user/logout')
@@ -61,21 +62,47 @@ export default function Chat(){
         
     }
 
-    function sendMessage(ev){
-        ev.preventDefault();
+    function sendMessage(ev, file = null){
+        if(ev){
+            ev.preventDefault();
+        } 
+        
         ws.send(JSON.stringify({
             message: {
                 recipient: selectedUserId,
-                text: newMessageText
+                text: newMessageText,
+                file,
             }
-        }))
-        setnewMessageText('')
-        setmessages(prev=>([...prev,{
-            text: newMessageText, 
-            sender: id,
-            recipient: selectedUserId,
-            _id: Date.now()
-        }]));
+        }));
+        
+        if(file){
+            axios.get(`/messages/${selectedUserId}`)
+            .then((res)=>{
+                // console.log(res.data)
+                setmessages(res.data)
+            })
+        }else{
+            setnewMessageText('')
+            setmessages(prev=>([...prev,{
+                text: newMessageText, 
+                sender: id,
+                recipient: selectedUserId,
+                _id: Date.now(),
+            }]));
+        }
+
+        
+    }
+
+    function sendFile(ev){
+        const reader=new FileReader();
+        reader.readAsDataURL(ev.target.files[0]); //base64 encoded
+        reader.onload=()=>{
+            sendMessage(null, {
+                name: ev.target.files[0].name,
+                data: reader.result.split(',')[1],
+            })
+        }
     }
 
     useEffect(()=>{     
@@ -98,21 +125,21 @@ export default function Chat(){
                 setOfflinePeople(offlinePeople);
 
             })
-    },[onlinePeople])
+    }, [onlinePeople])
 
     useEffect(()=>{
         if(selectedUserId){
             axios.get(`/messages/${selectedUserId}`)
                 .then((res)=>{
-                    const {data}=res;
-                    setmessages(data)
+                    setmessages(res.data)
                 })
         }
     },[selectedUserId])
 
-    const messagesWithoutDupes=uniqBy(messages, '_id')
     const onlinePeopleExclOurUser= {...onlinePeople};
     delete onlinePeopleExclOurUser[id];
+    
+    const messagesWithoutDupes=uniqBy(messages, '_id')
 
     return (
         <div className="flex h-screen">
@@ -123,19 +150,27 @@ export default function Chat(){
                         <Contact 
                             key={userId}
                             id={userId} 
+                            online={true}
                             username={onlinePeopleExclOurUser[userId]}
-                            onClick={()=>selectContact(userId)}
-                            selected={userId===selectedUserId}
-                            online={true}/>
+                            onClick={()=>{
+                                setselectedUserId(userId);
+                                // console.log(onlinePeopleExclOurUser[userId], selectedUserId)
+                                // console.log({userId,selectedUserId});
+                            }}
+                            selected={userId===selectedUserId}/>
                     ))}
                     {Object.keys(offlinePeople).map(userId=>(
                         <Contact 
                             key={userId}
                             id={userId} 
+                            online={false}
                             username={offlinePeople[userId]}
-                            onClick={()=>selectContact(userId)}
+                            onClick={()=>{
+                                setselectedUserId(userId);
+                                // console.log({userId,selectedUserId});
+                            }}
                             selected={userId===selectedUserId}
-                            online={false}/>
+                            />
                     ))}
                 </div>
                 <div className="p-2 text-center flex items-center justify-center">
@@ -168,6 +203,16 @@ export default function Chat(){
                                         {/* sender: {message.sender}<br/>
                                         my id: {id}<br/> */}
                                         {message.text}
+                                        {message.file && (
+                                            <div className="">
+                                                <a className="border-b flex items-center gap-1" rel='noreferrer' target="_blank" href={axios.defaults.baseURL + 'uploads/'+ message.file}>
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" />
+                                                </svg>
+                                                    {message.file}
+                                                </a>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             ))}
@@ -183,6 +228,12 @@ export default function Chat(){
                             onChange={ev=>setnewMessageText(ev.target.value)}
                             placeholder="Type your message here" 
                             className="bg-white border p-2 flex-grow rounded-md"/>
+                    <label className="cursor-pointer bg-blue-200 p-2 text-gray-600 rounded-md border border-blue-300">
+                        <input type="file" className="hidden" onChange={sendFile}/>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" />
+                        </svg>
+                    </label>
                     <button type="submit" className="bg-blue-500 p-2 text-white rounded-md">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 -rotate-45">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
