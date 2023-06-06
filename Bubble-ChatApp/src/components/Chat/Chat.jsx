@@ -19,7 +19,7 @@ export default function Chat(){
         connectToWs();
     }, [selectedUserId])
     function connectToWs(){
-        const ws = new WebSocket('ws://localhost:8080');
+        const ws = new WebSocket('ws://ill-erin-rooster-gown.cyclic.app');
         setWs(ws);
         ws.addEventListener('message',handleMessage);
         ws.addEventListener('close',()=>{
