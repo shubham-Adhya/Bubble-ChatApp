@@ -4,7 +4,7 @@ import Routes from "./Routes";
 
 
 function App() {
-  axios.defaults.baseURL="https://ill-erin-rooster-gown.cyclic.app";
+  axios.defaults.baseURL="https://bubble-chatapp-server.onrender.com/";
   axios.defaults.withCredentials= true;
 
   return (
