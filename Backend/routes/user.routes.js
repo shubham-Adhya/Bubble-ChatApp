@@ -36,7 +36,7 @@ userRouter.post('/register', async (req, res) => {
                 throw err
             } else {
                 res.cookie("BubbleToken", token, 
-                {sameSite: 'none', secure:true, domain: '.netlify.app'}).status(201).json({
+                {sameSite: 'none', secure:true, domain: '647f95ea29b2f7741faa152c--willowy-marshmallow-d4f899.netlify.app'}).status(201).json({
                     msg:'User created successfully, Logging In...',
                     _id: user._id,
                     userName: user.userName
@@ -69,7 +69,7 @@ userRouter.post('/login', async (req, res) => {
             if (err) {
                 throw err
             } else {
-                res.cookie("BubbleToken", token, {sameSite: 'none', secure:true,domain: '.netlify.app'}).status(201).json({
+                res.cookie("BubbleToken", token, {sameSite: 'none', secure:true,domain: '647f95ea29b2f7741faa152c--willowy-marshmallow-d4f899.netlify.app'}).status(201).json({
                     msg:'Login Success',
                     _id: user._id,
                     userName: user.userName
@@ -85,7 +85,7 @@ userRouter.post('/login', async (req, res) => {
 
 
 userRouter.post('/logout', async (req, res) => {
-    res.cookie("BubbleToken", '', {sameSite: 'none', secure:true, domain: '.netlify.app'}).status(201).json('logged out')
+    res.cookie("BubbleToken", '', {sameSite: 'none', secure:true, domain: '647f95ea29b2f7741faa152c--willowy-marshmallow-d4f899.netlify.app'}).status(201).json('logged out')
 })
 
 module.exports = {
