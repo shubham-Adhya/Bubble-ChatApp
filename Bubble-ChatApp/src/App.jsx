@@ -4,7 +4,7 @@ import Routes from "./Routes";
 
 
 function App() {
-  axios.defaults.baseURL="https://bubble-chatapp-server.onrender.com/";
+  axios.defaults.baseURL="http://localhost:8080/";
   axios.defaults.withCredentials= true;
 
   return (
