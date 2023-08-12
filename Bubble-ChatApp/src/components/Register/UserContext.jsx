@@ -7,12 +7,16 @@ export const UserContext = createContext({});
 export function UserContextProvider({ children }) {
   const [username, setLoggedInUserName] = useState(null);
   const [id, setId] = useState(null);
+  const [email, setEmail] = useState(null);
+  const [pic, setPic] = useState(null)
   useEffect(() => {
     if (document.cookie) {
       axios.get("/user/profile")
         .then((response) => {
-          setLoggedInUserName(response.data.userName);
-          setId(response.data.userId);
+          setLoggedInUserName(response.data.name);
+          setId(response.data._id);
+          setEmail(response.data.email)
+          setPic(response.data.pic)
         })
         .catch((err) => {
           console.log(err);
@@ -21,7 +25,7 @@ export function UserContextProvider({ children }) {
   }, []);
 
   return (
-    <UserContext.Provider value={{ username, id, setLoggedInUserName, setId }}>
+    <UserContext.Provider value={{ username, id, email, pic, setLoggedInUserName, setId, setEmail, setPic}}>
       {children}
     </UserContext.Provider>
   );
