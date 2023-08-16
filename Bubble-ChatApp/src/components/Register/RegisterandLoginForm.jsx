@@ -1,9 +1,9 @@
 import axios from "axios";
 import "animate.css";
-import { useState, useContext } from "react";
-import { UserContext } from "./UserContext.jsx";
+import { useState, useContext, useEffect } from "react";
+import { UserContext } from "../Context/UserContext";
 import Swal from "sweetalert2";
-
+import { useNavigate } from "react-router-dom";
 import {
   Card,
   Input,
@@ -43,56 +43,75 @@ export default function RegisterandLoginForm() {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [checked , setchecked]= useState(false)
+  const [checked, setchecked] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoginOrRegister, setIsLoginRegister] = useState("login");
-  const { setLoggedInUserName, setId, setEmail:setContextEmail, setPic, pic } = useContext(UserContext);
-  const [loading, setLoading] = useState(false)
+  const {
+    setLoggedInUserName,
+    setId,
+    setEmail: setContextEmail,
+    setPic,
+    pic,
+    username: contextUsername,
+    id: contextId,
+  } = useContext(UserContext);
+  const [loading, setLoading] = useState(false);
 
+  const navigate = useNavigate();
+  useEffect(() => {
+    (contextUsername && contextId) ? navigate("/chat") : navigate("/");
+  }, [contextUsername, contextId]);
 
-  function postDetails(pics){
-    setLoading(true)
-    if(!pics){
-      setLoading(false)
-      return 
+  async function postDetails(pics) {
+    setLoading(true);
+    if (!pics) {
+      setLoading(false);
+      return;
     }
-    if(pics.type==="image/jpeg" || pics.type==="image/png"){
-      const data=new FormData();
-        data.append("file", pics);
-        data.append("upload_preset", "Bubble-ChatApp");
-        data.append("cloud_name", "dgvivvjtu");
-        data.append("api_key", "114222667452997");
-        data.append("api_secret", "S6GMOuPb05OdlwPFC_gH9mU3K9o");
-        fetch("https://api.cloudinary.com/v1_1/dgvivvjtu/image/upload", {
-          method: "POST",
-          body: data,
+    if (pics.type === "image/jpeg" || pics.type === "image/png") {
+      const data = new FormData();
+      data.append("file", pics);
+      data.append("upload_preset", "Bubble-ChatApp");
+      data.append("cloud_name", "dgvivvjtu");
+      data.append("api_key", "114222667452997");
+      data.append("api_secret", "S6GMOuPb05OdlwPFC_gH9mU3K9o");
+      await fetch("https://api.cloudinary.com/v1_1/dgvivvjtu/image/upload", {
+        method: "POST",
+        body: data,
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          setPic(data.url.toString());
         })
-          .then((res) => res.json())
-          .then((data) => {
-            setPic(data.url.toString());
-          })
-          .catch((err) => {
-            console.log(err);
-          })
-          .finally(() => {
-            setLoading(false);
-          });
-    }else{
-      alert("Please Select an image")
+        .catch((err) => {
+          console.log(err);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    } else {
+      // alert("Please Select an image")
+      Toast.fire({
+        icon: "error",
+        title: "Please Select an image",
+      });
     }
   }
 
   async function handleSumbit(ev) {
     ev.preventDefault();
 
-    const url = isLoginOrRegister 
-    if(isLoginOrRegister === "register" && (!email || !username || !password || !confirmPassword)){
+    const url = isLoginOrRegister;
+    if (
+      isLoginOrRegister === "register" &&
+      (!email || !username || !password || !confirmPassword)
+    ) {
       // alert("Please fill all the fields")
       Toast.fire({
         icon: "error",
         title: "Please fill all the fields",
       });
-      return
+      return;
     }
     if (isLoginOrRegister === "register" && password !== confirmPassword) {
       // alert("Passwords do not match");
@@ -102,13 +121,13 @@ export default function RegisterandLoginForm() {
       });
       return;
     }
-    if(!checked){
+    if (!checked) {
       // alert("Please check terms and conditions")
       Toast.fire({
         icon: "error",
         title: "Please check terms and conditions",
       });
-      return
+      return;
     }
     setLoading(true);
     await axios
@@ -120,19 +139,19 @@ export default function RegisterandLoginForm() {
           icon: "success",
           title: res.data.msg,
         });
-        setTimeout(()=>{
+        setTimeout(() => {
           setLoggedInUserName(res.data.name || username);
           setId(res.data._id);
-          setContextEmail(res.data.email)
-          setPic(res.data.pic)
-        },1)
+          setContextEmail(res.data.email);
+          setPic(res.data.pic);
+        }, 1);
       })
       .catch((err) => {
         console.log(err);
       })
-      .finally(()=>{
-        setLoading(false)
-      })
+      .finally(() => {
+        setLoading(false);
+      });
   }
 
   return (
@@ -155,103 +174,6 @@ export default function RegisterandLoginForm() {
             Bubble
           </Typography>
         </div>
-
-        {/* <Typography variant="h4" color="blue-gray" className="text-center ">
-            {isLoginOrRegister === "register" ? "Sign Up" : "Login"}
-          </Typography>
-          <Typography color="gray" className="mt-1 font-normal text-center">
-            {isLoginOrRegister === "register"
-              ? "Enter your details to register."
-              : "Enter your details to login."}
-          </Typography> */}
-
-        {/* <form
-            className="mt-8 mb-2 w-80 max-w-screen-lg sm:w-96 "
-            onSubmit={handleSumbit}
-          >
-            <div className="mb-4 flex flex-col gap-6">
-              {isLoginOrRegister === "register" && (
-                <Input
-                  size="lg"
-                  label="Name"
-                  id="username"
-                  name="username"
-                  value={username}
-                  onChange={(ev) => setUsername(ev.target.value)}
-                  type="text"
-                  required
-                />
-              )}
-              <Input
-                size="lg"
-                label="Email"
-                id="email"
-                name="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(ev) => setEmail(ev.target.value)}
-                type="email"
-              />
-              <Input
-                type="password"
-                size="lg"
-                label="Password"
-                value={password}
-                required
-                onChange={(ev) => setPassword(ev.target.value)}
-              />
-            </div>
-            <Checkbox
-              className=""
-              label={
-                <Typography
-                  variant="small"
-                  color="gray"
-                  className="flex items-center font-normal"
-                >
-                  I agree the
-                  <a
-                    href="#"
-                    className="font-medium transition-colors hover:text-blue-600"
-                  >
-                    &nbsp;Terms and Conditions
-                  </a>
-                </Typography>
-              }
-              containerProps={{ className: "-ml-2.5" }}
-            />
-            <Button className="mt-6" fullWidth type="submit">
-              {isLoginOrRegister === "register" ? "Register" : "Login"}
-            </Button>
-
-            <div className=" text-gray-800 text-center mt-4 font-normal">
-              {isLoginOrRegister === "register" && (
-                <div>
-                  Already have an account?{" "}
-                  <button
-                    className="font-medium text-blue-600 transition-colors hover:text-blue-800"
-                    onClick={() => setIsLoginRegister("login")}
-                  >
-                    {" "}
-                    Login
-                  </button>
-                </div>
-              )}
-              {isLoginOrRegister === "login" && (
-                <div>
-                  Don&apos;t have an account? &nbsp;
-                  <button
-                    className="font-medium text-blue-600 transition-colors hover:text-blue-800"
-                    onClick={() => setIsLoginRegister("register")}
-                  >
-                    {" "}
-                    Sign Up
-                  </button>
-                </div>
-              )}
-            </div>
-          </form> */}
         <Tabs value="Login" className="font-sans">
           <TabsHeader
             className="rounded-none border-b border-blue-gray-50 bg-transparent p-0"
@@ -365,7 +287,6 @@ export default function RegisterandLoginForm() {
                 >
                   {loading ? <Spinner /> : "Register"}
                 </Button>
-
               </form>
             </TabPanel>
 

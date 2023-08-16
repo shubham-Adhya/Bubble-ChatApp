@@ -1,17 +1,16 @@
-import axios from "axios"
-import { UserContextProvider } from "./components/Register/UserContext";
-import Routes from "./Routes";
-// import { BrowserRouter,Routes, Route } from "react-router-dom";
+import axios from "axios";
+import { UserContextProvider } from "./components/Context/UserContext";
+import Renderer from "./Renderer";
 
 function App() {
-  axios.defaults.baseURL="http://localhost:8080/";
-  axios.defaults.withCredentials= true;
+  axios.defaults.baseURL = "http://localhost:8080/";
+  axios.defaults.withCredentials = true;
 
   return (
     <UserContextProvider>
-      <Routes/>
+      <Renderer />
     </UserContextProvider>
-  )
+  );
 }
 
-export default App
+export default App;

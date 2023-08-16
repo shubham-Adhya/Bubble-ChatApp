@@ -8,7 +8,8 @@ export function UserContextProvider({ children }) {
   const [username, setLoggedInUserName] = useState(null);
   const [id, setId] = useState(null);
   const [email, setEmail] = useState(null);
-  const [pic, setPic] = useState(null)
+  const [pic, setPic] = useState(null);
+  
   useEffect(() => {
     if (document.cookie) {
       axios.get("/user/profile")
